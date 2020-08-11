@@ -1,0 +1,23 @@
+.piece {
+  background-size: 35px 35px;
+  background-repeat: no-repeat;
+
+  width: 2.5vw;
+  height: 2.5vw;
+}
+.piece-black-circle {
+  background-color: black;
+  border-radius: 50%;
+  border: 1px solid yellow;
+}
+
+.piece-red-circle {
+  background-color: red;
+  border-radius: 50%;
+}
+
+.piece-red-triangle {
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 28px solid red;
+}

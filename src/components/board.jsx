@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import Square from "./square.jsx";
+import Piece from "./piece.jsx";
 import "./board.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -9,33 +10,59 @@ class Board extends Component {
     this.state = {
       n: 8,
       grid: [],
+      pieces: [],
+      redPiece: "circle",
+      blackPiece: "circle",
     };
     this.setN = this.setN.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.changeRed = this.changeRed.bind(this);
   }
 
   componentDidMount() {
     const grid = getInitialGrid(this.state.n);
     this.setState({ grid });
+    const pieces = getInitialPieces(this.state.n);
+    this.setState({ pieces });
   }
 
   setN() {
     const number = document.getElementById("num").value;
-    console.log(number);
+
     this.setState({
       n: number,
     });
+  }
+
+  changeRed() {
+    for (let i = 0; i < this.state.n; i++) {
+      for (let j = 0; j < this.state.n; j++) {
+        if (i < 2) {
+          if (this.state.redPiece === "circle") {
+            document.getElementById(`piece-${i}-${j}`).className =
+              "piece piece-red-triangle";
+            this.setState({ redPiece: "triangle" });
+          } else {
+            document.getElementById(`piece-${i}-${j}`).className =
+              "piece piece-red-circle";
+            this.setState({ redPiece: "circle" });
+          }
+        }
+      }
+    }
   }
 
   handleSubmit(event) {
     event.preventDefault();
     const grid = getInitialGrid(this.state.n);
     this.setState({ grid });
-    console.log(this.state.n);
+    const pieces = getInitialPieces(this.state.n);
+    this.setState({ pieces });
   }
 
   render() {
     const { grid } = this.state;
+    const { pieces } = this.state;
     return (
       <div>
         <form onSubmit={this.handleSubmit}>
@@ -61,6 +88,28 @@ class Board extends Component {
               </div>
             );
           })}
+          <div className="pieces">
+            {pieces.map((row, rowIdx) => {
+              return (
+                <div className="row" key={rowIdx}>
+                  {row.map((piece, pieceIdx) => {
+                    const { row, col, n } = piece;
+                    return (
+                      <Piece key={pieceIdx} n={n} col={col} row={row}></Piece>
+                    );
+                  })}
+                </div>
+              );
+            })}
+            <div>
+              <div className="btn btn-danger" onClick={this.changeRed}>
+                Change Red Pieces Shape
+              </div>
+              <button onClick={() => this.changeBlack}>
+                Change Black Pieces Shape
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -83,6 +132,26 @@ const createNode = (col, row) => {
   return {
     col,
     row,
+  };
+};
+
+const getInitialPieces = (n) => {
+  const pieces = [];
+  for (let row = 0; row < n; row++) {
+    const currentRow = [];
+    for (let col = 0; col < n; col++) {
+      currentRow.push(createPiece(col, row, n));
+    }
+    pieces.push(currentRow);
+  }
+  return pieces;
+};
+
+const createPiece = (col, row, n) => {
+  return {
+    col,
+    row,
+    n,
   };
 };
 
