@@ -11,9 +11,9 @@
 }
 
 .piece-black-triangle {
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-bottom: 28px solid rgb(58, 58, 58);
+  border-left: 1vw solid transparent;
+  border-right: 1vw solid transparent;
+  border-bottom: 2vw solid rgb(58, 58, 58);
 }
 
 .piece-red-circle {
@@ -22,7 +22,7 @@
 }
 
 .piece-red-triangle {
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-bottom: 28px solid red;
+  border-left: 1vw solid transparent;
+  border-right: 1vw solid transparent;
+  border-bottom: 2vw solid red;
 }
