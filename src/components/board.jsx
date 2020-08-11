@@ -500,8 +500,11 @@ class Board extends Component {
               );
             })}
             <div className="m-3">
-              <div className="btn btn-danger m-2" onClick={this.changeShape}>
+              <div className="btn btn-primary m-2" onClick={this.changeShape}>
                 Change Pieces Shape
+              </div>
+              <div style={{ color: this.state.playerTurn }}>
+                {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
               </div>
             </div>
           </div>
