@@ -26,3 +26,7 @@
   border-right: 1vw solid transparent;
   border-bottom: 2vw solid red;
 }
+
+.suggested {
+  background-color: rgb(95, 95, 255);
+}

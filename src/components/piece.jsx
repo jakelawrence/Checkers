@@ -4,7 +4,7 @@ import "./piece.css";
 
 export default class Piece extends Component {
   render() {
-    const { row, col, n } = this.props;
+    const { row, col, n, onClick } = this.props;
 
     let extraClassName = "";
 
@@ -18,6 +18,7 @@ export default class Piece extends Component {
       <div
         id={`piece-${row}-${col}`}
         className={`piece ${extraClassName}`}
+        onClick={() => onClick(row, col)}
       ></div>
     );
   }
