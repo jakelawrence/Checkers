@@ -6,9 +6,14 @@
   height: 2.5vw;
 }
 .piece-black-circle {
-  background-color: black;
+  background-color: rgb(58, 58, 58);
   border-radius: 50%;
-  border: 1px solid yellow;
+}
+
+.piece-black-triangle {
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 28px solid rgb(58, 58, 58);
 }
 
 .piece-red-circle {

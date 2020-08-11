@@ -17,6 +17,7 @@ class Board extends Component {
     this.setN = this.setN.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.changeRed = this.changeRed.bind(this);
+    this.changeBlack = this.changeBlack.bind(this);
   }
 
   componentDidMount() {
@@ -46,6 +47,25 @@ class Board extends Component {
             document.getElementById(`piece-${i}-${j}`).className =
               "piece piece-red-circle";
             this.setState({ redPiece: "circle" });
+          }
+        }
+      }
+    }
+  }
+
+  changeBlack() {
+    console.log("Hello");
+    for (let i = 0; i < this.state.n; i++) {
+      for (let j = 0; j < this.state.n; j++) {
+        if (i > this.state.n - 3) {
+          if (this.state.blackPiece === "circle") {
+            document.getElementById(`piece-${i}-${j}`).className =
+              "piece piece-black-triangle";
+            this.setState({ blackPiece: "triangle" });
+          } else {
+            document.getElementById(`piece-${i}-${j}`).className =
+              "piece piece-black-circle";
+            this.setState({ blackPiece: "circle" });
           }
         }
       }
@@ -101,13 +121,13 @@ class Board extends Component {
                 </div>
               );
             })}
-            <div>
-              <div className="btn btn-danger" onClick={this.changeRed}>
+            <div className="m-3">
+              <div className="btn btn-danger m-2" onClick={this.changeRed}>
                 Change Red Pieces Shape
               </div>
-              <button onClick={() => this.changeBlack}>
+              <div className="btn btn-dark m-2" onClick={this.changeBlack}>
                 Change Black Pieces Shape
-              </button>
+              </div>
             </div>
           </div>
         </div>
