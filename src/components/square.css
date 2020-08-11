@@ -1,0 +1,16 @@
+.square {
+  background-size: 35px 35px;
+  background-repeat: no-repeat;
+
+  width: 2.5vw;
+  height: 2.5vw;
+  margin-right: -2px;
+}
+
+.square-black {
+  background-color: black;
+}
+
+.square-white {
+  background-color: white;
+}
