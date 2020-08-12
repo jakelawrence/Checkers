@@ -12,6 +12,10 @@ This is used to store states for the checkerboard.
 
 Then return to the main directory and in a new terminal run:
 
+### `npm install`
+
+Then run:
+
 ### `npm start`
 
 This will begin to run the react app on port 5000.
