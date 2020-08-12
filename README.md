@@ -14,6 +14,6 @@ Then return to the main directory and in a new terminal run:
 
 ### `npm start`
 
-This will begin to run the react app on port 5000
+This will begin to run the react app on port 5000.
 
 After that you should be all set!
