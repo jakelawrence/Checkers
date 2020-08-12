@@ -30,6 +30,8 @@ class Board extends Component {
       suggestedPieceRow: 0,
       suggestedPieceColumn_Left: -1,
       suggestedPieceColumn_Right: -1,
+
+      savedState: false,
     };
 
     //bind functions
@@ -49,6 +51,7 @@ class Board extends Component {
 
   //set user selected value of n and save it to state
   setN() {
+    console.log("Hello");
     const number = document.getElementById("num").value;
 
     this.setState({
@@ -631,27 +634,7 @@ class Board extends Component {
     }
   }
 
-  //save current game to local storage
-  handleSave() {
-    //   localStorage.setItem("grid", JSON.stringify(this.state.grid));
-    //   localStorage.setItem("n", this.state.n);
-    //   localStorage.setItem("pieces", this.state.pieces);
-    //   localStorage.setItem("pieceShape", this.state.pieces);
-    //   localStorage.setItem("isPieceSelected", this.state.isPieceSelected);
-    //   localStorage.setItem("playerTurn", this.state.playerTurn);
-    //   localStorage.setItem("pieceSelectedRow", this.state.pieceSelectedRow);
-    //   localStorage.setItem("pieceSelectedCol", this.state.pieceSelectedCol);
-    //   localStorage.setItem("suggestedPieceRow", this.state.suggestedPieceRow);
-    //   localStorage.setItem(
-    //     "suggestedPieceColumn_Left",
-    //     this.state.suggestedPieceColumn_Left
-    //   );
-    //   localStorage.setItem(
-    //     "suggestedPieceColumn_Right",
-    //     this.state.suggestedPieceColumn_Right
-    //   );
-    //   localStorage.setItem("savedState", true);
-  }
+  handleSave() {}
 
   //handle the submit functionn for the number of rows and columns
   handleSubmit(event) {
@@ -666,20 +649,27 @@ class Board extends Component {
     const { grid } = this.state;
     const { pieces } = this.state;
     return (
-      <div>
+      <div className="container">
         {/* Number of rows and columns selecter */}
-        <form onSubmit={this.handleSubmit}>
-          <label>
-            Enter Number of Rows/Columns:
-            <input
-              id="num"
-              type="text"
-              value={this.state.n}
-              onChange={() => this.setN()}
-            />
-          </label>
-          <input type="submit" value="Submit" />
-        </form>
+
+        <div class="input-group m-auto w-50">
+          <input
+            id="num"
+            type="text"
+            class="form-control"
+            placeholder="Enter Number of Rows/Columns: (Default: 8)"
+            onChange={() => this.setN()}
+          />
+          <div class="input-group-append">
+            <button
+              class="btn btn-outline-primary"
+              onClick={this.handleSubmit}
+              type="button"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
         {/* Checker board under the player pieces */}
         <div className="grid">
           {grid.map((row, rowIdx) => {
