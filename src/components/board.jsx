@@ -8,26 +8,35 @@ class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      //number of rows and columns
       n: 8,
+      //black and white board
       grid: [],
+      //black and red player pieces
       pieces: [],
+      //selected shape of pieces
       pieceShape: "circle",
 
-      lastMoveRed: "",
-      lastMoveBlack: "",
+      //is there a piece currently selected
       isPieceSelected: false,
+      //current player's turn
       playerTurn: "red",
 
+      //coordinated of selected piece
       pieceSelectedRow: 0,
       pieceSelectedCol: 0,
+
+      //coordinates of suggested pieces
       suggestedPieceRow: 0,
       suggestedPieceColumn_Left: -1,
       suggestedPieceColumn_Right: -1,
     };
+
+    //bind functions
     this.setN = this.setN.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.changeShape = this.changeShape.bind(this);
-
+    this.handleSave = this.handleSave.bind(this);
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -38,6 +47,7 @@ class Board extends Component {
     this.setState({ pieces });
   }
 
+  //set user selected value of n and save it to state
   setN() {
     const number = document.getElementById("num").value;
 
@@ -46,6 +56,7 @@ class Board extends Component {
     });
   }
 
+  //change shape of pieces according to user
   changeShape() {
     for (let i = 0; i < this.state.n; i++) {
       for (let j = 0; j < this.state.n; j++) {
@@ -85,10 +96,8 @@ class Board extends Component {
     }
   }
 
+  //handle all moves played
   handleClick(row, col) {
-    console.log(row);
-    console.log(col);
-    console.log(this.state);
     if (this.state.playerTurn === "black") {
       if (
         col > 0 &&
@@ -130,13 +139,25 @@ class Board extends Component {
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col - 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className = "piece";
+          }
 
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col + 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
 
           this.setState({ isPieceSelected: false });
         } else if (
@@ -202,9 +223,15 @@ class Board extends Component {
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col + 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
 
           this.setState({ isPieceSelected: false });
         } else if (
@@ -231,6 +258,77 @@ class Board extends Component {
             pieceSelectedRow: 0,
             suggestedPieceRow: row - 1,
             suggestedPieceColumn_Right: -1,
+          });
+        }
+      } else if (
+        col === this.state.n - 1 &&
+        document.getElementById(`piece-${row}-${col}`).className ===
+          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+      ) {
+        if (
+          document.getElementById(`piece-${row}-${col}`).className ===
+            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
+          this.state.isPieceSelected === false
+        ) {
+          if (
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className =
+              "piece suggested";
+          }
+
+          this.setState({
+            isPieceSelected: true,
+            pieceSelectedCol: col,
+            pieceSelectedRow: row,
+            suggestedPieceRow: row - 1,
+
+            suggestedPieceColumn_Right: -1,
+            suggestedPieceColumn_Left: col - 1,
+          });
+        } else if (
+          this.state.isPieceSelected === true &&
+          row === this.state.pieceSelectedRow &&
+          col === this.state.pieceSelectedCol
+        ) {
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className = "piece";
+          }
+
+          this.setState({ isPieceSelected: false });
+        } else if (
+          this.state.isPieceSelected === true &&
+          (row !== this.state.pieceSelectedRow ||
+            col !== this.state.pieceSelectedCol)
+        ) {
+          if (this.state.suggestedPieceColumn_Left !== -1) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className = "piece";
+          }
+          if (this.state.suggestedPieceColumn_Right !== -1) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className = "piece";
+          }
+
+          document.getElementById(`piece-${row - 1}-${col - 1}`).className =
+            "piece suggested";
+          this.setState({
+            isPieceSelected: false,
+            pieceSelectedCol: 0,
+            pieceSelectedRow: 0,
+            suggestedPieceRow: row - 1,
+            suggestedPieceColumn_Left: -1,
           });
         }
       } else if (
@@ -306,13 +404,25 @@ class Board extends Component {
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col - 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className = "piece";
+          }
 
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col + 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
 
           this.setState({ isPieceSelected: false });
         } else if (
@@ -378,9 +488,15 @@ class Board extends Component {
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
-          document.getElementById(
-            `piece-${this.state.suggestedPieceRow}-${col + 1}`
-          ).className = "piece";
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
 
           this.setState({ isPieceSelected: false });
         } else if (
@@ -407,6 +523,77 @@ class Board extends Component {
             pieceSelectedRow: 0,
             suggestedPieceRow: row + 1,
             suggestedPieceColumn_Right: -1,
+          });
+        }
+      } else if (
+        col === this.state.n - 1 &&
+        document.getElementById(`piece-${row}-${col}`).className ===
+          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+      ) {
+        if (
+          document.getElementById(`piece-${row}-${col}`).className ===
+            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
+          this.state.isPieceSelected === false
+        ) {
+          if (
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className =
+              "piece suggested";
+          }
+
+          this.setState({
+            isPieceSelected: true,
+            pieceSelectedCol: col,
+            pieceSelectedRow: row,
+            suggestedPieceRow: row + 1,
+
+            suggestedPieceColumn_Right: -1,
+            suggestedPieceColumn_Left: col - 1,
+          });
+        } else if (
+          this.state.isPieceSelected === true &&
+          row === this.state.pieceSelectedRow &&
+          col === this.state.pieceSelectedCol
+        ) {
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col - 1}`
+            ).className = "piece";
+          }
+
+          this.setState({ isPieceSelected: false });
+        } else if (
+          this.state.isPieceSelected === true &&
+          (row !== this.state.pieceSelectedRow ||
+            col !== this.state.pieceSelectedCol)
+        ) {
+          if (this.state.suggestedPieceColumn_Left !== -1) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className = "piece";
+          }
+          if (this.state.suggestedPieceColumn_Right !== -1) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className = "piece";
+          }
+
+          document.getElementById(`piece-${row + 1}-${col - 1}`).className =
+            "piece suggested";
+          this.setState({
+            isPieceSelected: false,
+            pieceSelectedCol: 0,
+            pieceSelectedRow: 0,
+            suggestedPieceRow: row + 1,
+            suggestedPieceColumn_Left: -1,
           });
         }
       } else if (
@@ -444,6 +631,29 @@ class Board extends Component {
     }
   }
 
+  //save current game to local storage
+  handleSave() {
+    //   localStorage.setItem("grid", JSON.stringify(this.state.grid));
+    //   localStorage.setItem("n", this.state.n);
+    //   localStorage.setItem("pieces", this.state.pieces);
+    //   localStorage.setItem("pieceShape", this.state.pieces);
+    //   localStorage.setItem("isPieceSelected", this.state.isPieceSelected);
+    //   localStorage.setItem("playerTurn", this.state.playerTurn);
+    //   localStorage.setItem("pieceSelectedRow", this.state.pieceSelectedRow);
+    //   localStorage.setItem("pieceSelectedCol", this.state.pieceSelectedCol);
+    //   localStorage.setItem("suggestedPieceRow", this.state.suggestedPieceRow);
+    //   localStorage.setItem(
+    //     "suggestedPieceColumn_Left",
+    //     this.state.suggestedPieceColumn_Left
+    //   );
+    //   localStorage.setItem(
+    //     "suggestedPieceColumn_Right",
+    //     this.state.suggestedPieceColumn_Right
+    //   );
+    //   localStorage.setItem("savedState", true);
+  }
+
+  //handle the submit functionn for the number of rows and columns
   handleSubmit(event) {
     event.preventDefault();
     const grid = getInitialGrid(this.state.n);
@@ -457,6 +667,7 @@ class Board extends Component {
     const { pieces } = this.state;
     return (
       <div>
+        {/* Number of rows and columns selecter */}
         <form onSubmit={this.handleSubmit}>
           <label>
             Enter Number of Rows/Columns:
@@ -469,6 +680,7 @@ class Board extends Component {
           </label>
           <input type="submit" value="Submit" />
         </form>
+        {/* Checker board under the player pieces */}
         <div className="grid">
           {grid.map((row, rowIdx) => {
             return (
@@ -480,6 +692,7 @@ class Board extends Component {
               </div>
             );
           })}
+          {/* Pieces over the top of the checker board */}
           <div className="pieces">
             {pieces.map((row, rowIdx) => {
               return (
@@ -499,12 +712,23 @@ class Board extends Component {
                 </div>
               );
             })}
+            {/* Change Piece Shape Button and PLayer's Turn ID */}
             <div className="m-3">
               <div className="btn btn-primary m-2" onClick={this.changeShape}>
                 Change Pieces Shape
               </div>
+
               <div style={{ color: this.state.playerTurn }}>
                 {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
+              </div>
+            </div>
+            {/* Save and Reset Game Buttons */}
+            <div>
+              <div className="btn btn-success m-2" onClick={this.handleSave}>
+                Save Game
+              </div>
+              <div className="btn btn-danger m-2" onClick={this.changeShape}>
+                Reset Game
               </div>
             </div>
           </div>
@@ -514,25 +738,28 @@ class Board extends Component {
   }
 }
 
+//Creates a grid of sqaure NxN, according to the user inputed N
 const getInitialGrid = (n) => {
   const grid = [];
   for (let row = 0; row < n; row++) {
     const currentRow = [];
     for (let col = 0; col < n; col++) {
-      currentRow.push(createNode(col, row));
+      currentRow.push(createSquare(col, row));
     }
     grid.push(currentRow);
   }
   return grid;
 };
 
-const createNode = (col, row) => {
+//creates Squares
+const createSquare = (col, row) => {
   return {
     col,
     row,
   };
 };
 
+//creates piece grid with pieces in starting position
 const getInitialPieces = (n) => {
   const pieces = [];
   for (let row = 0; row < n; row++) {
@@ -545,6 +772,7 @@ const getInitialPieces = (n) => {
   return pieces;
 };
 
+//creates individual pieces
 const createPiece = (col, row, n) => {
   return {
     col,
