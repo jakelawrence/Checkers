@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import axios from "axios";
 import Square from "./square.jsx";
 import Piece from "./piece.jsx";
 import "./board.css";
@@ -8,7 +9,6 @@ class Board extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      //number of rows and columns
       n: 8,
       //black and white board
       grid: [],
@@ -39,19 +39,50 @@ class Board extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.changeShape = this.changeShape.bind(this);
     this.handleSave = this.handleSave.bind(this);
+    this.handleReset = this.handleReset.bind(this);
     this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
-    const grid = getInitialGrid(this.state.n);
-    this.setState({ grid });
-    const pieces = getInitialPieces(this.state.n);
-    this.setState({ pieces });
+    if (localStorage.getItem("stateSaved") === "true") {
+      axios
+        .get("http://localhost:5000/saves/")
+        .then((response) => {
+          this.setState(
+            {
+              n: response.data[0].n,
+              pieces: response.data[0].pieces,
+              pieceShape: response.data[0].pieceShape,
+              isPieceSelected: response.data[0].isPieceSelected,
+              playerTurn: response.data[0].playerTurn,
+              pieceSelectedRow: response.data[0].pieceSelectedRow,
+              pieceSelectedCol: response.data[0].pieceSelectedCol,
+              suggestedPieceRow: response.data[0].suggestedPieceRow,
+              suggestedPieceColumn_Left:
+                response.data[0].suggestedPieceColumn_Left,
+              suggestedPieceColumn_Right:
+                response.data[0].suggestedPieceColumn_Right,
+            },
+            () => {
+              console.log(this.state.pieces);
+              const grid = getInitialGrid(this.state.n);
+              this.setState({ grid });
+            }
+          );
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      const grid = getInitialGrid(this.state.n);
+      this.setState({ grid });
+      const pieces = getInitialPieces(this.state.n, this.state.pieceShape);
+      this.setState({ pieces });
+    }
   }
 
   //set user selected value of n and save it to state
   setN() {
-    console.log("Hello");
     const number = document.getElementById("num").value;
 
     this.setState({
@@ -61,6 +92,7 @@ class Board extends Component {
 
   //change shape of pieces according to user
   changeShape() {
+    let newPieces = this.state.pieces;
     for (let i = 0; i < this.state.n; i++) {
       for (let j = 0; j < this.state.n; j++) {
         if (this.state.pieceShape === "circle") {
@@ -77,9 +109,9 @@ class Board extends Component {
             document.getElementById(`piece-${i}-${j}`).className =
               "piece piece-black-triangle";
           }
-
+          newPieces[i][j].shape = "triangle";
           this.setState({ pieceShape: "triangle" });
-        } else {
+        } else if (this.state.pieceShape === "triangle") {
           if (
             document.getElementById(`piece-${i}-${j}`).className ===
             "piece piece-red-triangle"
@@ -93,6 +125,7 @@ class Board extends Component {
             document.getElementById(`piece-${i}-${j}`).className =
               "piece piece-black-circle";
           }
+          newPieces[i][j].shape = "circle";
           this.setState({ pieceShape: "circle" });
         }
       }
@@ -101,47 +134,59 @@ class Board extends Component {
 
   //handle all moves played
   handleClick(row, col) {
+    //if player turn is black
     if (this.state.playerTurn === "black") {
+      //if the selected piece is not in the first or last column
       if (
         col > 0 &&
         col < this.state.n - 1 &&
         document.getElementById(`piece-${row}-${col}`).className ===
-          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+          `piece piece-black-${this.state.pieceShape}`
       ) {
+        //if the there is currently no other piece selected
         if (this.state.isPieceSelected === false) {
+          //if the space up and to the right is open, then mark it as a suggested move
           if (
             document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
-              "piece piece-black-circle" &&
+              `piece piece-black-${this.state.pieceShape}` &&
             document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
-              "piece piece-red-circle"
+              `piece piece-red-${this.state.pieceShape}`
           ) {
             document.getElementById(`piece-${row - 1}-${col + 1}`).className =
               "piece suggested";
           }
+          //if the space up and to the left is open, then mark it as a suggested move
           if (
             document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
-              "piece piece-black-circle" &&
+              `piece piece-black-${this.state.pieceShape}` &&
             document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
-              "piece piece-red-circle"
+              `piece piece-red-${this.state.pieceShape}`
           ) {
             document.getElementById(`piece-${row - 1}-${col - 1}`).className =
               "piece suggested";
           }
 
+          //update state
           this.setState({
+            //piece has been selected
             isPieceSelected: true,
+            //selected piece coordinates
             pieceSelectedCol: col,
             pieceSelectedRow: row,
 
+            //suggested moves coordinates
             suggestedPieceRow: row - 1,
             suggestedPieceColumn_Left: col - 1,
             suggestedPieceColumn_Right: col + 1,
           });
-        } else if (
+        }
+        //if there is a piece selected and player chooses to unselect it
+        else if (
           this.state.isPieceSelected === true &&
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
+          //if there is a suggested move up and to the left, change it back to blank square
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
@@ -151,7 +196,7 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
             ).className = "piece";
           }
-
+          //if there is a suggested move up and to the right, change it back to blank square
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col + 1}`
@@ -161,28 +206,62 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col + 1}`
             ).className = "piece";
           }
-
+          //piece is no longer selected
           this.setState({ isPieceSelected: false });
-        } else if (
+        }
+        //if there is a piece selected and player chooses a different piece to highlight
+        else if (
           this.state.isPieceSelected === true &&
           (row !== this.state.pieceSelectedRow ||
             col !== this.state.pieceSelectedCol)
         ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
+          //if there is a suggested move up and to the left, change it back to blank square
+          //in this we ask if suggestedPieceColumn_Left is not -1, that means that it has been
+          //set and we haven't selected a piece on the first or last column previously
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
             ).className = "piece";
           }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
+          //same thing as if statement above but for up and to the right
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
             ).className = "piece";
           }
 
-          document.getElementById(`piece-${row - 1}-${col - 1}`).className =
-            "piece suggested";
-          document.getElementById(`piece-${row - 1}-${col + 1}`).className =
-            "piece suggested";
+          //if the space up and to the right is open, then mark it as a suggested move
+          if (
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className =
+              "piece suggested";
+          }
+          //if the space up and to the left is open, then mark it as a suggested move
+          if (
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row - 1}-${col - 1}`).className =
+              "piece suggested";
+          }
+
+          //update state
           this.setState({
             isPieceSelected: true,
             pieceSelectedCol: col,
@@ -192,16 +271,91 @@ class Board extends Component {
             suggestedPieceColumn_Right: col + 1,
           });
         }
-      } else if (
+      }
+      //if the selected piece is in the first column
+      else if (
         col === 0 &&
         document.getElementById(`piece-${row}-${col}`).className ===
           `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
       ) {
-        if (
-          document.getElementById(`piece-${row}-${col}`).className ===
-            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
-          this.state.isPieceSelected === false
+        //if there is no piece currently selected
+        if (this.state.isPieceSelected === false) {
+          //if the move up and to the right is open, highlight it as a suggested move
+          //we don't do up and to the left here because we would go out of bounds looking
+          //to the left in the first row
+          if (
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className =
+              "piece suggested";
+          }
+
+          //update state
+          this.setState({
+            isPieceSelected: true,
+            pieceSelectedCol: col,
+            pieceSelectedRow: row,
+            suggestedPieceRow: row - 1,
+
+            suggestedPieceColumn_Right: col + 1,
+            //keep as -1 because there is no suggested move to the left
+            suggestedPieceColumn_Left: -1,
+          });
+        }
+        //if there is a piece selected and the player chooses to unselect it
+        else if (
+          this.state.isPieceSelected === true &&
+          row === this.state.pieceSelectedRow &&
+          col === this.state.pieceSelectedCol
         ) {
+          //if the piece up and to the right was marked as a suggested move
+          //return it to a default square
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
+
+          //set state to no piece selected
+          this.setState({ isPieceSelected: false });
+        }
+        //if there is a piece selected and the player chooses a different piece to highlight
+        else if (
+          this.state.isPieceSelected === true &&
+          (row !== this.state.pieceSelectedRow ||
+            col !== this.state.pieceSelectedCol)
+        ) {
+          //unselect the previously suggested moves
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className = "piece";
+          }
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className = "piece";
+          }
+          //if the move up and to the right is open, highlight it as a suggested move
+          //we don't do up and to the left here because we would go out of bounds looking
+          //to the left in the first row
           if (
             document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
               `piece piece-black-${this.state.pieceShape}` &&
@@ -213,49 +367,6 @@ class Board extends Component {
           }
 
           this.setState({
-            isPieceSelected: true,
-            pieceSelectedCol: col,
-            pieceSelectedRow: row,
-            suggestedPieceRow: row - 1,
-
-            suggestedPieceColumn_Right: col + 1,
-            suggestedPieceColumn_Left: -1,
-          });
-        } else if (
-          this.state.isPieceSelected === true &&
-          row === this.state.pieceSelectedRow &&
-          col === this.state.pieceSelectedCol
-        ) {
-          if (
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${col + 1}`
-            ).className === "piece suggested"
-          ) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${col + 1}`
-            ).className = "piece";
-          }
-
-          this.setState({ isPieceSelected: false });
-        } else if (
-          this.state.isPieceSelected === true &&
-          (row !== this.state.pieceSelectedRow ||
-            col !== this.state.pieceSelectedCol)
-        ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
-            ).className = "piece";
-          }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
-            ).className = "piece";
-          }
-
-          document.getElementById(`piece-${row - 1}-${col + 1}`).className =
-            "piece suggested";
-          this.setState({
             isPieceSelected: false,
             pieceSelectedCol: 0,
             pieceSelectedRow: 0,
@@ -263,16 +374,18 @@ class Board extends Component {
             suggestedPieceColumn_Right: -1,
           });
         }
-      } else if (
+      }
+      //if the selected piece is in the last column
+      else if (
         col === this.state.n - 1 &&
         document.getElementById(`piece-${row}-${col}`).className ===
-          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+          `piece piece-black-${this.state.pieceShape}`
       ) {
-        if (
-          document.getElementById(`piece-${row}-${col}`).className ===
-            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
-          this.state.isPieceSelected === false
-        ) {
+        //if there is no currently selected pieces
+        if (this.state.isPieceSelected === false) {
+          //if the move up and to the left is open, highlight it as a suggested move
+          //we don't do up and to the right here because we would go out of bounds looking
+          //to the right in the last row
           if (
             document.getElementById(`piece-${row - 1}-${col - 1}`).className !==
               `piece piece-black-${this.state.pieceShape}` &&
@@ -288,15 +401,19 @@ class Board extends Component {
             pieceSelectedCol: col,
             pieceSelectedRow: row,
             suggestedPieceRow: row - 1,
-
+            //keep suggested move to the right empty
             suggestedPieceColumn_Right: -1,
             suggestedPieceColumn_Left: col - 1,
           });
-        } else if (
+        }
+        //if there is a piece selected and the player chooses to unselect it
+        else if (
           this.state.isPieceSelected === true &&
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
+          //if there is a suggested move up and to the left
+          //return it back to a blank space
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
@@ -306,26 +423,50 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
             ).className = "piece";
           }
-
+          //no current selected pieces
           this.setState({ isPieceSelected: false });
-        } else if (
+        }
+        //if there is a selected piece and the user selects a different piece
+        else if (
           this.state.isPieceSelected === true &&
           (row !== this.state.pieceSelectedRow ||
             col !== this.state.pieceSelectedCol)
         ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
+          //unselect the previously suggested moves
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
             ).className = "piece";
           }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
             ).className = "piece";
           }
 
-          document.getElementById(`piece-${row - 1}-${col - 1}`).className =
-            "piece suggested";
+          //if the move up and to the left is open, highlight it as a suggested move
+          //we don't do up and to the right here because we would go out of bounds looking
+          //to the right in the last row
+          if (
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}` &&
+            (row < 2 || row > this.state.n - 2)
+          ) {
+            document.getElementById(`piece-${row - 1}-${col + 1}`).className =
+              "piece suggested";
+          }
           this.setState({
             isPieceSelected: false,
             pieceSelectedCol: 0,
@@ -334,28 +475,58 @@ class Board extends Component {
             suggestedPieceColumn_Left: -1,
           });
         }
-      } else if (
+      }
+      //if the player chooses a suggested move
+      else if (
         this.state.isPieceSelected &&
         document.getElementById(`piece-${row}-${col}`).className ===
           "piece suggested"
       ) {
+        //execute the user selected move and move the piece to that square
         document.getElementById(
           `piece-${row}-${col}`
-        ).className = `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`;
+        ).className = `piece piece-black-${this.state.pieceShape}`;
+        //remove the piece from its previous space
         document.getElementById(
           `piece-${this.state.pieceSelectedRow}-${this.state.pieceSelectedCol}`
         ).className = "piece";
-        for (let i = 0; i < this.state.n; i++) {
-          if (
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${i}`
-            ).className === "piece suggested"
-          ) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${i}`
-            ).className = "piece";
-          }
+        const newPieces = this.state.pieces;
+        newPieces[row][col].player = "black";
+        newPieces[this.state.pieceSelectedRow][
+          this.state.pieceSelectedCol
+        ].player = "";
+        this.setState({ pieces: newPieces });
+        console.log(newPieces);
+        //remove suggested moves
+        if (
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow - 1}-${
+              this.state.pieceSelectedCol + 1
+            }`
+          ).className === "piece suggested"
+        ) {
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow - 1}-${
+              this.state.pieceSelectedCol + 1
+            }`
+          ).className = "piece";
         }
+        if (
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow - 1}-${
+              this.state.pieceSelectedCol - 1
+            }`
+          ).className === "piece suggested"
+        ) {
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow - 1}-${
+              this.state.pieceSelectedCol - 1
+            }`
+          ).className = "piece";
+        }
+
+        //reset selected piece and suggested moves
+        //set it to red player's turn
         this.setState({
           isPieceSelected: false,
           pieceSelectedRow: 0,
@@ -366,47 +537,61 @@ class Board extends Component {
           playerTurn: "red",
         });
       }
-    } else if (this.state.playerTurn === "red") {
+    }
+    //if player turn is red
+    else if (this.state.playerTurn === "red") {
+      //if the selected piece is not in the first or last column
       if (
         col > 0 &&
         col < this.state.n - 1 &&
         document.getElementById(`piece-${row}-${col}`).className ===
-          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+          `piece piece-red-${this.state.pieceShape}`
       ) {
+        console.log(this.state.isPieceSelected);
+        //if the there is currently no other piece selected
         if (this.state.isPieceSelected === false) {
+          //if the space down and to the right is open, then mark it as a suggested move
           if (
             document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
-              "piece piece-black-circle" &&
+              `piece piece-black-${this.state.pieceShape}` &&
             document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
-              "piece piece-red-circle"
+              `piece piece-black-${this.state.pieceShape}`
           ) {
             document.getElementById(`piece-${row + 1}-${col + 1}`).className =
               "piece suggested";
           }
+          //if the space down and to the left is open, then mark it as a suggested move
           if (
             document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
-              "piece piece-black-circle" &&
+              `piece piece-black-${this.state.pieceShape}` &&
             document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
-              "piece piece-red-circle"
+              `piece piece-red-${this.state.pieceShape}`
           ) {
             document.getElementById(`piece-${row + 1}-${col - 1}`).className =
               "piece suggested";
           }
 
+          //update state
           this.setState({
+            //piece has been selected
             isPieceSelected: true,
+            //selected piece coordinates
             pieceSelectedCol: col,
             pieceSelectedRow: row,
 
+            //suggested moves coordinates
             suggestedPieceRow: row + 1,
             suggestedPieceColumn_Left: col - 1,
             suggestedPieceColumn_Right: col + 1,
           });
-        } else if (
+        }
+        //if there is a piece selected and player chooses to unselect it
+        else if (
           this.state.isPieceSelected === true &&
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
+          //if there is a suggested move down and to the left, change it back to blank square
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
@@ -416,7 +601,7 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
             ).className = "piece";
           }
-
+          //if there is a suggested move up and to the right, change it back to blank square
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col + 1}`
@@ -426,28 +611,62 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col + 1}`
             ).className = "piece";
           }
-
+          //piece is no longer selected
           this.setState({ isPieceSelected: false });
-        } else if (
+        }
+        //if there is a piece selected and player chooses a different piece to highlight
+        else if (
           this.state.isPieceSelected === true &&
           (row !== this.state.pieceSelectedRow ||
             col !== this.state.pieceSelectedCol)
         ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
+          //if there is a suggested move down and to the left, change it back to blank square
+          //in this we ask if suggestedPieceColumn_Left is not -1, that means that it has been
+          //set and we haven't selected a piece on the first or last column previously
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
             ).className = "piece";
           }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
+          //same thing as if statement above but for up and to the right
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
             ).className = "piece";
           }
 
-          document.getElementById(`piece-${row + 1}-${col - 1}`).className =
-            "piece suggested";
-          document.getElementById(`piece-${row + 1}-${col + 1}`).className =
-            "piece suggested";
+          //if the space down and to the right is open, then mark it as a suggested move
+          if (
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className =
+              "piece suggested";
+          }
+          //if the space down and to the left is open, then mark it as a suggested move
+          if (
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row + 1}-${col - 1}`).className =
+              "piece suggested";
+          }
+
+          //update state
           this.setState({
             isPieceSelected: true,
             pieceSelectedCol: col,
@@ -457,16 +676,91 @@ class Board extends Component {
             suggestedPieceColumn_Right: col + 1,
           });
         }
-      } else if (
+      }
+      //if the selected piece is in the first column
+      else if (
         col === 0 &&
         document.getElementById(`piece-${row}-${col}`).className ===
           `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
       ) {
-        if (
-          document.getElementById(`piece-${row}-${col}`).className ===
-            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
-          this.state.isPieceSelected === false
+        //if there is no piece currently selected
+        if (this.state.isPieceSelected === false) {
+          //if the move down and to the right is open, highlight it as a suggested move
+          //we don't do down and to the left here because we would go out of bounds looking
+          //to the left in the first row
+          if (
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className =
+              "piece suggested";
+          }
+
+          //update state
+          this.setState({
+            isPieceSelected: true,
+            pieceSelectedCol: col,
+            pieceSelectedRow: row,
+            suggestedPieceRow: row + 1,
+
+            suggestedPieceColumn_Right: col + 1,
+            //keep as -1 because there is no suggested move to the left
+            suggestedPieceColumn_Left: -1,
+          });
+        }
+        //if there is a piece selected and the player chooses to unselect it
+        else if (
+          this.state.isPieceSelected === true &&
+          row === this.state.pieceSelectedRow &&
+          col === this.state.pieceSelectedCol
         ) {
+          //if the piece down and to the right was marked as a suggested move
+          //return it to a default square
+          if (
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${col + 1}`
+            ).className = "piece";
+          }
+
+          //set state to no piece selected
+          this.setState({ isPieceSelected: false });
+        }
+        //if there is a piece selected and the player chooses a different piece to highlight
+        else if (
+          this.state.isPieceSelected === true &&
+          (row !== this.state.pieceSelectedRow ||
+            col !== this.state.pieceSelectedCol)
+        ) {
+          //unselect the previously suggested moves
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className = "piece";
+          }
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className = "piece";
+          }
+          //if the move down and to the right is open, highlight it as a suggested move
+          //we don't do down and to the left here because we would go out of bounds looking
+          //to the left in the first row
           if (
             document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
               `piece piece-black-${this.state.pieceShape}` &&
@@ -478,49 +772,6 @@ class Board extends Component {
           }
 
           this.setState({
-            isPieceSelected: true,
-            pieceSelectedCol: col,
-            pieceSelectedRow: row,
-            suggestedPieceRow: row + 1,
-
-            suggestedPieceColumn_Right: col + 1,
-            suggestedPieceColumn_Left: -1,
-          });
-        } else if (
-          this.state.isPieceSelected === true &&
-          row === this.state.pieceSelectedRow &&
-          col === this.state.pieceSelectedCol
-        ) {
-          if (
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${col + 1}`
-            ).className === "piece suggested"
-          ) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${col + 1}`
-            ).className = "piece";
-          }
-
-          this.setState({ isPieceSelected: false });
-        } else if (
-          this.state.isPieceSelected === true &&
-          (row !== this.state.pieceSelectedRow ||
-            col !== this.state.pieceSelectedCol)
-        ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
-            ).className = "piece";
-          }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
-            ).className = "piece";
-          }
-
-          document.getElementById(`piece-${row + 1}-${col + 1}`).className =
-            "piece suggested";
-          this.setState({
             isPieceSelected: false,
             pieceSelectedCol: 0,
             pieceSelectedRow: 0,
@@ -528,16 +779,18 @@ class Board extends Component {
             suggestedPieceColumn_Right: -1,
           });
         }
-      } else if (
+      }
+      //if the selected piece is in the last column
+      else if (
         col === this.state.n - 1 &&
         document.getElementById(`piece-${row}-${col}`).className ===
-          `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`
+          `piece piece-red-${this.state.pieceShape}`
       ) {
-        if (
-          document.getElementById(`piece-${row}-${col}`).className ===
-            `piece piece-${this.state.playerTurn}-${this.state.pieceShape}` &&
-          this.state.isPieceSelected === false
-        ) {
+        //if there is no currently selected pieces
+        if (this.state.isPieceSelected === false) {
+          //if the move down and to the left is open, highlight it as a suggested move
+          //we don't do down and to the right here because we would go out of bounds looking
+          //to the right in the last row
           if (
             document.getElementById(`piece-${row + 1}-${col - 1}`).className !==
               `piece piece-black-${this.state.pieceShape}` &&
@@ -553,15 +806,19 @@ class Board extends Component {
             pieceSelectedCol: col,
             pieceSelectedRow: row,
             suggestedPieceRow: row + 1,
-
+            //keep suggested move to the right empty
             suggestedPieceColumn_Right: -1,
             suggestedPieceColumn_Left: col - 1,
           });
-        } else if (
+        }
+        //if there is a piece selected and the player chooses to unselect it
+        else if (
           this.state.isPieceSelected === true &&
           row === this.state.pieceSelectedRow &&
           col === this.state.pieceSelectedCol
         ) {
+          //if there is a suggested move down and to the left
+          //return it back to a blank space
           if (
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
@@ -571,26 +828,49 @@ class Board extends Component {
               `piece-${this.state.suggestedPieceRow}-${col - 1}`
             ).className = "piece";
           }
-
+          //no current selected pieces
           this.setState({ isPieceSelected: false });
-        } else if (
+        }
+        //if there is a selected piece and the user selects a different piece
+        else if (
           this.state.isPieceSelected === true &&
           (row !== this.state.pieceSelectedRow ||
             col !== this.state.pieceSelectedCol)
         ) {
-          if (this.state.suggestedPieceColumn_Left !== -1) {
+          //unselect the previously suggested moves
+          if (
+            this.state.suggestedPieceColumn_Left !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Left}`
             ).className = "piece";
           }
-          if (this.state.suggestedPieceColumn_Right !== -1) {
+          if (
+            this.state.suggestedPieceColumn_Right !== -1 &&
+            document.getElementById(
+              `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
+            ).className === "piece suggested"
+          ) {
             document.getElementById(
               `piece-${this.state.suggestedPieceRow}-${this.state.suggestedPieceColumn_Right}`
             ).className = "piece";
           }
 
-          document.getElementById(`piece-${row + 1}-${col - 1}`).className =
-            "piece suggested";
+          //if the move down and to the left is open, highlight it as a suggested move
+          //we don't do down and to the right here because we would go out of bounds looking
+          //to the right in the last row
+          if (
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-black-${this.state.pieceShape}` &&
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className !==
+              `piece piece-red-${this.state.pieceShape}`
+          ) {
+            document.getElementById(`piece-${row + 1}-${col + 1}`).className =
+              "piece suggested";
+          }
           this.setState({
             isPieceSelected: false,
             pieceSelectedCol: 0,
@@ -599,28 +879,58 @@ class Board extends Component {
             suggestedPieceColumn_Left: -1,
           });
         }
-      } else if (
+      }
+      //if the player chooses a suggested move
+      else if (
         this.state.isPieceSelected &&
         document.getElementById(`piece-${row}-${col}`).className ===
           "piece suggested"
       ) {
+        //execute the user selected move and move the piece to that square
         document.getElementById(
           `piece-${row}-${col}`
-        ).className = `piece piece-${this.state.playerTurn}-${this.state.pieceShape}`;
+        ).className = `piece piece-red-${this.state.pieceShape}`;
+        //remove the piece from its previous space
         document.getElementById(
           `piece-${this.state.pieceSelectedRow}-${this.state.pieceSelectedCol}`
         ).className = "piece";
-        for (let i = 0; i < this.state.n; i++) {
-          if (
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${i}`
-            ).className === "piece suggested"
-          ) {
-            document.getElementById(
-              `piece-${this.state.suggestedPieceRow}-${i}`
-            ).className = "piece";
-          }
+        const newPieces = this.state.pieces;
+        newPieces[row][col].player = "red";
+        newPieces[this.state.pieceSelectedRow][
+          this.state.pieceSelectedCol
+        ].player = "";
+        this.setState({ pieces: newPieces });
+        console.log(newPieces);
+        //remove suggested moves
+        if (
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow + 1}-${
+              this.state.pieceSelectedCol + 1
+            }`
+          ).className === "piece suggested"
+        ) {
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow + 1}-${
+              this.state.pieceSelectedCol + 1
+            }`
+          ).className = "piece";
         }
+        if (
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow + 1}-${
+              this.state.pieceSelectedCol - 1
+            }`
+          ).className === "piece suggested"
+        ) {
+          document.getElementById(
+            `piece-${this.state.pieceSelectedRow + 1}-${
+              this.state.pieceSelectedCol - 1
+            }`
+          ).className = "piece";
+        }
+
+        //reset selected piece and suggested moves
+        //set it to black player's turn
         this.setState({
           isPieceSelected: false,
           pieceSelectedRow: 0,
@@ -634,35 +944,62 @@ class Board extends Component {
     }
   }
 
-  handleSave() {}
+  handleSave() {
+    localStorage.setItem("stateSaved", "true");
+    const save = {
+      n: this.state.n,
+      pieces: this.state.pieces,
+      pieceShape: this.state.pieceShape,
+      isPieceSelected: this.state.isPieceSelected,
+      playerTurn: this.state.playerTurn,
+      pieceSelectedRow: this.state.pieceSelectedRow,
+      pieceSelectedCol: this.state.pieceSelectedCol,
+      suggestedPieceRow: this.state.suggestedPieceRow,
+      suggestedPieceColumn_Left: this.state.suggestedPieceColumn_Left,
+      suggestedPieceColumn_Right: this.state.suggestedPieceColumn_Right,
+    };
+    axios
+      .patch("http://localhost:5000/saves/", save)
+      .then((res) => console.log(res.data));
+  }
+
+  handleReset() {
+    localStorage.removeItem("stateSaved");
+    const grid = getInitialGrid(this.state.n);
+    this.setState({ grid });
+    const pieces = getInitialPieces(this.state.n, this.state.pieceShape);
+    this.setState({ pieces });
+    this.setState({ playerTurn: "red" });
+  }
 
   //handle the submit functionn for the number of rows and columns
   handleSubmit(event) {
     event.preventDefault();
     const grid = getInitialGrid(this.state.n);
     this.setState({ grid });
-    const pieces = getInitialPieces(this.state.n);
+    const pieces = getInitialPieces(this.state.n, this.state.pieceShape);
     this.setState({ pieces });
   }
 
   render() {
     const { grid } = this.state;
     const { pieces } = this.state;
+
     return (
       <div className="container">
         {/* Number of rows and columns selecter */}
 
-        <div class="input-group m-auto w-50">
+        <div className="input-group m-auto w-50">
           <input
             id="num"
             type="text"
-            class="form-control"
+            className="form-control"
             placeholder="Enter Number of Rows/Columns: (Default: 8)"
             onChange={() => this.setN()}
           />
-          <div class="input-group-append">
+          <div className="input-group-append">
             <button
-              class="btn btn-outline-primary"
+              className="btn btn-outline-primary"
               onClick={this.handleSubmit}
               type="button"
             >
@@ -676,7 +1013,7 @@ class Board extends Component {
             return (
               <div className="row" key={rowIdx}>
                 {row.map((square, squareIdx) => {
-                  const { row, col, isBlack } = square;
+                  const { row, col } = square;
                   return <Square key={squareIdx} col={col} row={row}></Square>;
                 })}
               </div>
@@ -688,12 +1025,13 @@ class Board extends Component {
               return (
                 <div className="row" key={rowIdx}>
                   {row.map((piece, pieceIdx) => {
-                    const { row, col, n } = piece;
+                    const { row, col, shape, player } = piece;
                     return (
                       <Piece
                         onClick={(row, col) => this.handleClick(row, col)}
+                        shape={shape}
+                        player={player}
                         key={pieceIdx}
-                        n={n}
                         col={col}
                         row={row}
                       ></Piece>
@@ -717,7 +1055,7 @@ class Board extends Component {
               <div className="btn btn-success m-2" onClick={this.handleSave}>
                 Save Game
               </div>
-              <div className="btn btn-danger m-2" onClick={this.changeShape}>
+              <div className="btn btn-danger m-2" onClick={this.handleReset}>
                 Reset Game
               </div>
             </div>
@@ -750,12 +1088,19 @@ const createSquare = (col, row) => {
 };
 
 //creates piece grid with pieces in starting position
-const getInitialPieces = (n) => {
+const getInitialPieces = (n, shape) => {
   const pieces = [];
   for (let row = 0; row < n; row++) {
     const currentRow = [];
+    let player = "";
+    if (row < 2) {
+      player = "red";
+    }
+    if (row > n - 3) {
+      player = "black";
+    }
     for (let col = 0; col < n; col++) {
-      currentRow.push(createPiece(col, row, n));
+      currentRow.push(createPiece(col, row, shape, player));
     }
     pieces.push(currentRow);
   }
@@ -763,11 +1108,12 @@ const getInitialPieces = (n) => {
 };
 
 //creates individual pieces
-const createPiece = (col, row, n) => {
+const createPiece = (col, row, shape, player) => {
   return {
     col,
     row,
-    n,
+    shape,
+    player,
   };
 };
 

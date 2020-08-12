@@ -4,14 +4,12 @@ import "./piece.css";
 
 export default class Piece extends Component {
   render() {
-    const { row, col, n, onClick } = this.props;
+    const { row, col, n, shape, player, onClick } = this.props;
 
     let extraClassName = "";
 
-    if (row < 2) {
-      extraClassName = "piece-red-circle";
-    } else if (row > n - 3) {
-      extraClassName = "piece-black-circle";
+    if (player) {
+      extraClassName = `piece-${player}-${shape}`;
     }
 
     return (
