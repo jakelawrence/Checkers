@@ -88,11 +88,6 @@ class Board extends Component {
     this.setState({
       n: number,
     });
-
-    const grid = getInitialGrid(this.state.n);
-    this.setState({ grid });
-    const pieces = getInitialPieces(this.state.n, this.state.pieceShape);
-    this.setState({ pieces });
   }
 
   //change shape of pieces according to user
@@ -1001,11 +996,17 @@ class Board extends Component {
               onChange={() => this.setN()}
               id="num"
               className="multi-range"
-              type="range"
+              type="number"
               value={this.state.n}
-              min="4"
-              max="12"
+              min="5"
+              max="13"
             />
+            <div
+              onClick={this.handleSubmit}
+              className="btn btn-info btn-sm ml-2"
+            >
+              Submit
+            </div>
           </div>
 
           <div>
@@ -1061,11 +1062,12 @@ class Board extends Component {
         </div>
         <div className="m-3">
           {/* Change Piece Shape Button and Player's Turn indicator */}
-          <div className="btn btn-primary m-2" onClick={this.changeShape}>
-            Change Pieces Shape
-          </div>
+
           <div style={{ color: this.state.playerTurn }}>
             {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
+          </div>
+          <div className="btn btn-primary m-2" onClick={this.changeShape}>
+            Change Pieces Shape
           </div>
         </div>
       </div>
