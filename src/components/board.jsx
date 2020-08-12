@@ -1009,18 +1009,24 @@ class Board extends Component {
             </div>
           </div>
 
-          <div>
+          <div className="mt-1">
             <div
-              className="btn btn-success btn-sm mr-2 mt-3"
+              className="btn btn-success mx-1 mb-2 btn-sm "
               onClick={this.handleSave}
             >
               Save Game
             </div>
             <div
-              className="btn btn-danger btn-sm mr-2 mt-3"
+              className="btn btn-danger mx-1 mb-2 btn-sm "
               onClick={this.handleReset}
             >
               Reset Game
+            </div>
+            <div
+              className="btn btn-primary btn-sm btn-block"
+              onClick={this.changeShape}
+            >
+              Change Pieces Shape
             </div>
           </div>
         </ul>
@@ -1060,15 +1066,12 @@ class Board extends Component {
             })}
           </div>
         </div>
-        <div className="m-3">
+        <div className="m-4">
           {/* Change Piece Shape Button and Player's Turn indicator */}
 
-          <div style={{ color: this.state.playerTurn }}>
+          <h2 style={{ color: this.state.playerTurn }}>
             {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
-          </div>
-          <div className="btn btn-primary m-2" onClick={this.changeShape}>
-            Change Pieces Shape
-          </div>
+          </h2>
         </div>
       </div>
     );
