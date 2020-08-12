@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-//how user is presented in DB
+//how save is presented in DB
 const saveSchema = new Schema(
   {
     n: {
