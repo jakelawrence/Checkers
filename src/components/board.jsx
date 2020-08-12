@@ -88,6 +88,11 @@ class Board extends Component {
     this.setState({
       n: number,
     });
+
+    const grid = getInitialGrid(this.state.n);
+    this.setState({ grid });
+    const pieces = getInitialPieces(this.state.n, this.state.pieceShape);
+    this.setState({ pieces });
   }
 
   //change shape of pieces according to user
@@ -988,35 +993,30 @@ class Board extends Component {
     return (
       <div className="">
         {/* Number of rows and columns selecter */}
-        <ul className="nav bg-dark p-3">
-          <h1 className="text-white">Checkers</h1>
-          <div className="input-group m-auto w-25">
+        <ul className="nav bg-dark p-3 d-flex justify-content-between">
+          <h1 className="text-white ml-2 mt-2">Checkers</h1>
+          <div>
+            <h2 className="text-white">Select Size:</h2>
             <input
-              id="num"
-              type="text"
-              className="form-control"
-              placeholder="Enter Size"
               onChange={() => this.setN()}
+              id="num"
+              className="multi-range"
+              type="range"
+              value={this.state.n}
+              min="4"
+              max="12"
             />
-            <div className="input-group-append">
-              <button
-                className="btn btn-primary"
-                onClick={this.handleSubmit}
-                type="button"
-              >
-                Submit
-              </button>
-            </div>
           </div>
+
           <div>
             <div
-              className="btn btn-success btn-sm mr-2 mt-2"
+              className="btn btn-success btn-sm mr-2 mt-3"
               onClick={this.handleSave}
             >
               Save Game
             </div>
             <div
-              className="btn btn-danger btn-sm mr-2 mt-2"
+              className="btn btn-danger btn-sm mr-2 mt-3"
               onClick={this.handleReset}
             >
               Reset Game
@@ -1057,17 +1057,15 @@ class Board extends Component {
                 </div>
               );
             })}
-            {/* Change Piece Shape Button and PLayer's Turn ID */}
-            <div className="m-3">
-              <div className="btn btn-primary m-2" onClick={this.changeShape}>
-                Change Pieces Shape
-              </div>
-
-              <div style={{ color: this.state.playerTurn }}>
-                {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
-              </div>
-            </div>
-            {/* Save and Reset Game Buttons */}
+          </div>
+        </div>
+        <div className="m-3">
+          {/* Change Piece Shape Button and Player's Turn indicator */}
+          <div className="btn btn-primary m-2" onClick={this.changeShape}>
+            Change Pieces Shape
+          </div>
+          <div style={{ color: this.state.playerTurn }}>
+            {this.state.playerTurn.toUpperCase()} PLAYER'S TURN
           </div>
         </div>
       </div>
