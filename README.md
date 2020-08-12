@@ -6,7 +6,7 @@ Navigate to the backend directory of the project and run:
 
 ### `npm start`
 
-This will begin running the local server used to store states for the checkerboard
+This will begin running the local server used to store states for the checkerboard.
 
 Then return to the main directory and on a new terminal run:
 
