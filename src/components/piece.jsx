@@ -4,7 +4,7 @@ import "./piece.css";
 
 export default class Piece extends Component {
   render() {
-    const { row, col, n, shape, player, onClick } = this.props;
+    const { row, col, shape, player, onClick } = this.props;
 
     let extraClassName = "";
 

@@ -986,27 +986,44 @@ class Board extends Component {
     const { pieces } = this.state;
 
     return (
-      <div className="container">
+      <div className="">
         {/* Number of rows and columns selecter */}
-
-        <div className="input-group m-auto w-50">
-          <input
-            id="num"
-            type="text"
-            className="form-control"
-            placeholder="Enter Number of Rows/Columns: (Default: 8)"
-            onChange={() => this.setN()}
-          />
-          <div className="input-group-append">
-            <button
-              className="btn btn-outline-primary"
-              onClick={this.handleSubmit}
-              type="button"
-            >
-              Submit
-            </button>
+        <ul className="nav bg-dark p-3">
+          <h1 className="text-white">Checkers</h1>
+          <div className="input-group m-auto w-25">
+            <input
+              id="num"
+              type="text"
+              className="form-control"
+              placeholder="Enter Size"
+              onChange={() => this.setN()}
+            />
+            <div className="input-group-append">
+              <button
+                className="btn btn-primary"
+                onClick={this.handleSubmit}
+                type="button"
+              >
+                Submit
+              </button>
+            </div>
           </div>
-        </div>
+          <div>
+            <div
+              className="btn btn-success btn-sm mr-2 mt-2"
+              onClick={this.handleSave}
+            >
+              Save Game
+            </div>
+            <div
+              className="btn btn-danger btn-sm mr-2 mt-2"
+              onClick={this.handleReset}
+            >
+              Reset Game
+            </div>
+          </div>
+        </ul>
+
         {/* Checker board under the player pieces */}
         <div className="grid">
           {grid.map((row, rowIdx) => {
@@ -1051,14 +1068,6 @@ class Board extends Component {
               </div>
             </div>
             {/* Save and Reset Game Buttons */}
-            <div>
-              <div className="btn btn-success m-2" onClick={this.handleSave}>
-                Save Game
-              </div>
-              <div className="btn btn-danger m-2" onClick={this.handleReset}>
-                Reset Game
-              </div>
-            </div>
           </div>
         </div>
       </div>

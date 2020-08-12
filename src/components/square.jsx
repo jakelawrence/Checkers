@@ -4,7 +4,7 @@ import "./square.css";
 
 export default class Node extends Component {
   render() {
-    const { col, row, isBlack } = this.props;
+    const { col, row } = this.props;
     let extraClassName = "";
     if (row % 2 === 0) {
       if (col % 2 === 0) {
