@@ -6,7 +6,7 @@ Navigate to the backend directory of the project and run:
 
 ### `npm start`
 
-This will begin running the local server on port 3000.
+This will begin running the local server on port 5000.
 
 This is used to store states for the checkerboard.
 
@@ -18,6 +18,6 @@ Then run:
 
 ### `npm start`
 
-This will begin to run the react app on port 5000.
+This will begin to run the react app on port 3000.
 
 After that you should be all set!
